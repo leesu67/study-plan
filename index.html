@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高中分科數學 讀書計畫產生器 | 李向宇老師</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft JhengHei", Arial, sans-serif; }
+body { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); min-height: 100vh; }
+.container { max-width: 1200px; margin: 0 auto; }
+.home-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 20px; text-align: center; }
+.home-logo { font-size: 4rem; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.home-title { color: white; font-size: 2.8rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+.home-subtitle { color: #ffd700; font-size: 1.3rem; margin-bottom: 40px; }
+.home-section-title { color: white; font-size: 1.5rem; margin: 30px 0 20px; }
+.home-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; max-width: 800px; width: 100%; }
+.home-card { background: white; border-radius: 20px; padding: 35px 25px; text-align: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-decoration: none; color: inherit; }
+.home-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+.home-card.fk-a { border-top: 5px solid #e74c3c; }
+.home-card.fk-b { border-top: 5px solid #3498db; }
+.card-icon { font-size: 3.5rem; margin-bottom: 12px; }
+.card-title { font-size: 1.8rem; font-weight: bold; margin-bottom: 8px; color: #333; }
+.card-title.fk-a { color: #e74c3c; }
+.card-title.fk-b { color: #3498db; }
+.card-desc { color: #666; font-size: 0.95rem; line-height: 1.5; margin-bottom: 15px; }
+.card-topics { background: #f8f9fa; border-radius: 10px; padding: 12px; font-size: 0.8rem; color: #666; text-align: left; }
+.card-topics strong { display: block; margin-bottom: 8px; color: #333; }
+.card-topics ul { margin: 0; padding-left: 18px; }
+.card-topics li { margin-bottom: 4px; }
+.home-footer { margin-top: 40px; color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; max-width: 900px; }
+.feature-item { background: rgba(255,255,255,0.15); padding: 18px; border-radius: 15px; color: white; }
+.feature-item .icon { font-size: 1.8rem; margin-bottom: 8px; }
+.feature-item h3 { font-size: 1rem; margin-bottom: 6px; }
+.feature-item p { font-size: 0.8rem; opacity: 0.9; }
+
+/* App Page Styles */
+body.app-page { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 20px; }
+.app-view { display: none; }
+.app-view.active { display: block; }
+h1 { text-align: center; color: white; font-size: 2.2rem; margin-bottom: 5px; }
+.subtitle { text-align: center; color: #ffd700; font-size: 1.1rem; margin-bottom: 25px; }
+.card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+.card h2 { color: #1e3c72; margin-bottom: 15px; border-bottom: 3px solid #1e3c72; padding-bottom: 10px; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.form-group { margin-bottom: 10px; }
+.form-group label { display: block; color: #555; font-weight: bold; margin-bottom: 5px; }
+.form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 0.95rem; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3c72; }
+.form-group .note { font-size: 0.8rem; color: #666; margin-top: 5px; }
+.rest-days-checkbox { display: flex; flex-wrap: wrap; gap: 10px; }
+.rest-days-checkbox label { display: flex; align-items: center; gap: 5px; padding: 8px 12px; background: #f5f5f5; border-radius: 20px; cursor: pointer; transition: all 0.3s; border: 2px solid #ddd; }
+.rest-days-checkbox label:hover { background: #e8e8e8; }
+.rest-days-checkbox input[type="checkbox"] { width: auto; }
+.rest-days-checkbox label:has(input:checked) { background: #1e3c72; color: white; border-color: #1e3c72; }
+.btn { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border: none; padding: 12px 35px; font-size: 1.1rem; border-radius: 25px; cursor: pointer; display: block; margin: 15px auto; transition: all 0.3s; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(30,60,114,0.4); }
+.btn-outline { background: transparent; border: 2px solid #1e3c72; color: #1e3c72; margin: 8px 5px; padding: 8px 20px; font-size: 0.95rem; border-radius: 20px; }
+.btn-outline:hover { background: #1e3c72; color: white; }
+.btn-excel { border-color: #217346; color: #217346; }
+.btn-excel:hover { background: #217346; color: white; }
+.btn-word { border-color: #2b579a; color: #2b579a; }
+.btn-word:hover { background: #2b579a; color: white; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; background: #ddd; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+.calendar-header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 12px; text-align: center; font-weight: bold; }
+.calendar-day { background: white; min-height: 100px; padding: 5px; display: flex; flex-direction: column; }
+.calendar-day.other-month { background: #f5f5f5; color: #999; }
+.calendar-day.weekend { background: #fff5f5; }
+.calendar-day.rest { background: #f0f0f0; }
+.calendar-day.study { background: #e8f5e9; }
+.calendar-day.review { background: #e3f2fd; }
+.calendar-day.complete { background: #fff3e0; }
+.day-number { font-weight: bold; font-size: 0.9rem; color: #333; margin-bottom: 3px; }
+.day-content { flex: 1; font-size: 0.7rem; overflow: hidden; line-height: 1.3; }
+.day-content .chapter { color: #1e3c72; font-weight: 600; }
+.day-content .sub-chapter { color: #666; font-size: 0.65rem; }
+.day-type { font-size: 0.65rem; padding: 2px 5px; border-radius: 3px; text-align: center; margin-top: auto; }
+.day-type.study { background: #4caf50; color: white; }
+.day-type.rest { background: #9e9e9e; color: white; }
+.day-type.review { background: #2196f3; color: white; }
+.day-type.complete { background: #ff9800; color: white; }
+.month-container { margin-bottom: 30px; }
+.month-header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 15px 20px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
+.month-stats { font-size: 0.85rem; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 15px; }
+.summary-box { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+.summary-box h3 { margin-bottom: 15px; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+.summary-item { background: rgba(255,255,255,0.2); padding: 12px; border-radius: 8px; text-align: center; }
+.summary-item .number { font-size: 1.8rem; font-weight: bold; }
+.summary-item .label { font-size: 0.85rem; opacity: 0.9; }
+.progress-bar { height: 22px; background: #e9ecef; border-radius: 11px; overflow: hidden; margin: 10px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); border-radius: 11px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; }
+.export-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin: 15px 0; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+.legend-color { width: 20px; height: 20px; border-radius: 4px; }
+.schedule-container { display: none; }
+.schedule-container.active { display: block; }
+.error-msg { background: #ffebee; color: #c62828; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none; }
+.error-msg.show { display: block; }
+.topics-progress { background: rgba(255,255,255,0.15); padding: 10px 15px; border-radius: 8px; margin-top: 10px; }
+.topics-progress .current { color: #ffd700; font-weight: bold; }
+.back-home { position: fixed; top: 20px; left: 20px; background: white; color: #333; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s; z-index: 1000; cursor: pointer; }
+.back-home:hover { transform: scale(1.05); }
+@media print { body { background: white; } .card:not(.schedule-container) { display: none; } .schedule-container { display: block !important; } .export-buttons, .back-home { display: none; } }
+@media (max-width: 768px) { .features { grid-template-columns: 1fr; } .home-title { font-size: 2rem; } .home-cards { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- 首頁 -->
+<div class="home-view">
+<div class="home-container">
+<div class="home-logo">📚</div>
+<h1 class="home-title">高中分科數學 讀書計畫產生器</h1>
+<p class="home-subtitle">👨‍🏫 李向宇老師製作</p>
+
+<h2 class="home-section-title">🔬 請選擇考試科目</h2>
+<div class="home-cards">
+<a class="home-card fk-a" onclick="openApp('fkA')">
+<div class="card-icon">🧮</div>
+<div class="card-title fk-a">分科數甲</div>
+<div class="card-desc">自然組適用，包含必修1-4冊 + 選修I、II</div>
+<div class="card-topics">
+<strong>📖 必修範圍（1-4冊）</strong>
+<ul>
+<li>必修數學第1冊：數與式、直線與圓</li>
+<li>必修數學第2冊：三角、數列與級數</li>
+<li>必修數學第3冊：排列組合、機率、數據分析</li>
+<li>必修數學第4冊：平面向量、空間向量、矩陣</li>
+</ul>
+<strong>🔬 選修範圍</strong>
+<ul>
+<li>選修數學I：極限與函數、微分、積分</li>
+<li>選修數學II：線性變換、二次曲線、複數</li>
+</ul>
+<strong>📊 總主題數：175 個</strong>
+</div>
+</a>
+
+<a class="home-card fk-b" onclick="openApp('fkB')">
+<div class="card-icon">📊</div>
+<div class="card-title fk-b">分科數乙</div>
+<div class="card-desc">社會組適用，包含必修1-4冊 + 選修I、II</div>
+<div class="card-topics">
+<strong>📖 必修範圍（1-4冊）</strong>
+<ul>
+<li>必修數學第1冊：數與式、直線與圓</li>
+<li>必修數學第2冊：三角、數列與級數</li>
+<li>必修數學第3冊：排列組合、機率、數據分析</li>
+<li>必修數學第4冊：平面向量、空間向量、矩陣</li>
+</ul>
+<strong>📈 選修範圍</strong>
+<ul>
+<li>選修數學I：極限與函數、微分、積分</li>
+<li>選修數學II：線性規劃、機率與統計</li>
+</ul>
+<strong>📊 總主題數：165 個</strong>
+</div>
+</a>
+</div>
+
+<div class="features">
+<div class="feature-item"><div class="icon">📅</div><h3>日曆格式</h3><p>以直觀的日曆方式呈現學習計畫</p></div>
+<div class="feature-item"><div class="icon">📊</div><h3>Excel/Word匯出</h3><p>支援匯出Excel和Word格式</p></div>
+<div class="feature-item"><div class="icon">⚙️</div><h3>自訂設定</h3><p>可自訂日期、主題數、休息日</p></div>
+</div>
+<div class="home-footer"><p>© 2025 李向宇老師 | 僅供學習使用</p></div>
+</div>
+</div>
+
+<!-- 應用程式視圖 -->
+<div class="app-view">
+<div class="container">
+<a class="back-home" onclick="goHome()">🏠 回首頁</a>
+<h1 id="appTitle">📚 高中分科數甲 讀書計畫</h1>
+<p class="subtitle">👨‍🏫 李向宇老師製作 | 日曆格式</p>
+
+<div class="card">
+<h2>⚙️ 學習設定</h2>
+<div class="error-msg" id="errorMsg"></div>
+<div class="settings-grid">
+<div class="form-group"><label>📅 開始日期</label><input type="date" id="startDate" value="2025-05-01"></div>
+<div class="form-group"><label>📅 結束日期</label><input type="date" id="endDate" value="2025-11-30"></div>
+<div class="form-group">
+<label>📖 每日學習主題數</label>
+<select id="dailyChapters">
+<option value="1" selected>每天 1 個主題</option>
+<option value="2">每天 2 個主題</option>
+<option value="3">每天 3 個主題</option>
+</select>
+<p class="note">💡 可選擇每天學習 1、2 或 3 個主題</p>
+</div>
+<div class="form-group">
+<label>😴 休假日（可複選）</label>
+<div class="rest-days-checkbox">
+<label><input type="checkbox" name="restDay" value="0"><span>週日</span></label>
+<label><input type="checkbox" name="restDay" value="1"><span>週一</span></label>
+<label><input type="checkbox" name="restDay" value="2"><span>週二</span></label>
+<label><input type="checkbox" name="restDay" value="3"><span>週三</span></label>
+<label><input type="checkbox" name="restDay" value="4"><span>週四</span></label>
+<label><input type="checkbox" name="restDay" value="5"><span>週五</span></label>
+<label><input type="checkbox" name="restDay" value="6" checked><span>週六</span></label>
+</div>
+</div>
+<div class="form-group"><label>🎯 複習模式</label>
+<select id="reviewMode">
+<option value="none">無複習</option>
+<option value="weekly" selected>每週複習</option>
+<option value="biweekly">雙週複習</option>
+</select>
+</div>
+<div class="form-group"><label>📝 每日練習題數</label><input type="number" id="dailyPractice" value="10" min="0" max="50"></div>
+</div>
+</div>
+
+<button class="btn" onclick="generateSchedule()">🚀 產生讀書計畫</button>
+
+<div class="schedule-container" id="scheduleContainer">
+<div class="summary-box">
+<h3>📊 計畫總覽</h3>
+<div class="summary-grid">
+<div class="summary-item"><div class="number" id="totalDays">0</div><div class="label">總天數</div></div>
+<div class="summary-item"><div class="number" id="studyDays">0</div><div class="label">學習天數</div></div>
+<div class="summary-item"><div class="number" id="restDaysCount">0</div><div class="label">休息天數</div></div>
+<div class="summary-item"><div class="number" id="totalTopics">0</div><div class="label">學習主題</div></div>
+<div class="summary-item"><div class="number" id="totalPractice">0</div><div class="label">總練習題</div></div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%">0%</div></div>
+<div class="topics-progress">
+<span>學習進度：</span><span class="current" id="currentTopic">0</span> / <span id="totalTopicCount">0</span> 個主題
+</div>
+</div>
+
+<div class="legend">
+<div class="legend-item"><div class="legend-color" style="background: #e8f5e9;"></div> 學習</div>
+<div class="legend-item"><div class="legend-color" style="background: #e3f2fd;"></div> 複習</div>
+<div class="legend-item"><div class="legend-color" style="background: #f0f0f0;"></div> 休息</div>
+<div class="legend-item"><div class="legend-color" style="background: #fff3e0;"></div> 完成</div>
+</div>
+
+<div class="export-buttons">
+<button class="btn btn-outline" onclick="window.print()">🖨️ 列印</button>
+<button class="btn btn-outline btn-excel" onclick="exportExcelCalendar()">📊 匯出Excel日曆</button>
+<button class="btn btn-outline btn-word" onclick="exportWordCalendar()">📄 匯出Word日曆</button>
+<button class="btn btn-outline" onclick="copyToClipboard()">📋 複製</button>
+</div>
+
+<div id="calendarContent"></div>
+</div>
+</div>
+</div>
+
+<script>
+// 分科數甲主題（包含必修1-4冊 + 選修I、II）
+const topicsFkA = [
+// ============ 必修數學第1冊 ============
+{ch1:"必修1-1",name:"數與式",f:"必1-1-1",t:"有理數與實數"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-2",t:"數線與絕對值"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-3",t:"不等式與區間"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-4",t:"乘法公式"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-5",t:"指數運算"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-6",t:"科學記號"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-7",t:"常用對數"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-1",t:"線型函數"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-2",t:"直線方程式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-3",t:"二元一次不等式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-4",t:"線型規劃初步"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-5",t:"圓的標準式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-6",t:"圓的一般式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-7",t:"圓與直線關係"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-8",t:"圓的切線"},
+
+// ============ 必修數學第2冊 ============
+{ch1:"必修2-1",name:"三角",f:"必2-1-1",t:"銳角三角函數"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-2",t:"廣義三角函數"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-3",t:"弧度與扇形"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-4",t:"正餘弦定理"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-5",t:"和角公式"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-6",t:"倍角公式"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-7",t:"半角公式"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-8",t:"三角測量"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-1",t:"等差數列"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-2",t:"等比數列"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-3",t:"遞迴關係"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-4",t:"數學歸納法"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-5",t:"Σ求和公式"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-6",t:"有限級數"},
+
+// ============ 必修數學第3冊 ============
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-1",t:"邏輯與集合"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-2",t:"集合運算"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-3",t:"加法原理"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-4",t:"乘法原理"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-5",t:"排列"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-6",t:"組合"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-7",t:"分組分堆"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-8",t:"二項式定理"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-9",t:"巴斯卡三角形"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-1",t:"樣本空間與事件"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-2",t:"古典機率"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-3",t:"機率性質"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-4",t:"條件機率"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-5",t:"獨立事件"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-6",t:"貝氏定理"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-7",t:"數學期望值"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-1",t:"平均數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-2",t:"中位數與眾數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-3",t:"全距與四分位距"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-4",t:"標準差"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-5",t:"變異數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-6",t:"數據標準化"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-7",t:"相關係數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-8",t:"迴歸直線"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-9",t:"最小平方估計"},
+
+// ============ 必修數學第4冊 ============
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-1",t:"向量定義"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-2",t:"向量運算"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-3",t:"坐標向量"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-4",t:"線性組合"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-5",t:"向量內積"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-6",t:"內積應用"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-7",t:"正射影"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-8",t:"兩向量夾角"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-9",t:"點到直線距離"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-10",t:"平行線距離"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-11",t:"四心座標"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-12",t:"面積行列式"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-13",t:"克拉瑪公式"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-1",t:"空間概念"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-2",t:"空間坐標系"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-3",t:"空間向量運算"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-4",t:"空間內積"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-5",t:"空間外積"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-6",t:"三階行列式"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-7",t:"重心座標"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-8",t:"四面體體積"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-1",t:"平面方程式"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-2",t:"兩平面夾角"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-3",t:"空間直線方程式"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-4",t:"直線參數式"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-5",t:"直線與平面交點"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-6",t:"兩直線關係"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-7",t:"平面與直線關係"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-8",t:"點到平面距離"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-9",t:"兩平行平面距離"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-10",t:"兩歪斜線距離"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-1",t:"矩陣加法減法"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-2",t:"矩陣乘法"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-3",t:"矩陣乘法性質"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-4",t:"單位矩陣"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-5",t:"二階反矩陣"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-6",t:"三階行列式"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-7",t:"行列式性質"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-8",t:"Cramer's Rule"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-9",t:"矩陣秩"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-10",t:"高斯消去法"},
+
+// ============ 選修數學I（微積分） ============
+{ch1:"選修I-1",name:"極限",f:"選I-1-1",t:"數列極限"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-2",t:"函數極限"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-3",t:"極限性質"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-4",t:"夾擠定理"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-5",t:"兩個重要極限"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-6",t:"連續函數"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-7",t:"中間值定理"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-1",t:"導數定義"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-2",t:"導函數"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-3",t:"微分公式"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-4",t:"連鎖律"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-5",t:"隱微分"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-6",t:"對數微分"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-7",t:"均值定理"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-8",t:"洛必達法則"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-9",t:"函數圖形"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-10",t:"遞增遞減"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-11",t:"極值判定"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-12",t:"凹凸性"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-13",t:"漸近線"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-14",t:"繪圖練習"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-1",t:"不定積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-2",t:"基本積分公式"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-3",t:"分部積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-4",t:"代換積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-5",t:"定積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-6",t:"微積分基本定理"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-7",t:"定積分應用"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-8",t:"面積計算"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-9",t:"旋轉體體積"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-10",t:"弧長計算"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-11",t:"物理應用"},
+
+// ============ 選修數學II ============
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-1",t:"線性變換定義"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-2",t:"旋轉"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-3",t:"鏡射"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-4",t:"伸縮"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-5",t:"推移"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-6",t:"合成變換"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-7",t:"變換矩陣"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-8",t:"Kernel與Range"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-9",t:"特徵值"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-10",t:"特徵向量"},
+{ch1:"選修II-1",name:"線性變換",f:"選II-1-11",t:"對角化"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-1",t:"拋物線定義"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-2",t:"拋物線標準式"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-3",t:"拋物線參數式"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-4",t:"橢圓定義"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-5",t:"橢圓標準式"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-6",t:"橢圓參數式"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-7",t:"橢圓光學性質"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-8",t:"雙曲線定義"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-9",t:"雙曲線標準式"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-10",t:"雙曲線漸近線"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-11",t:"圓錐曲線"},
+{ch1:"選修II-2",name:"二次曲線",f:"選II-2-12",t:"軌跡方程式的求法"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-1",t:"複數定義"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-2",t:"複數運算"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-3",t:"複數平面"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-4",t:"極形式"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-5",t:"迪莫弗定理"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-6",t:"複數n次方根"},
+{ch1:"選修II-3",name:"複數",f:"選II-3-7",t:"複數幾何應用"}
+];
+
+// 分科數乙主題（包含必修1-4冊 + 選修I、II）
+const topicsFkB = [
+// ============ 必修數學第1冊 ============
+{ch1:"必修1-1",name:"數與式",f:"必1-1-1",t:"有理數與實數"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-2",t:"數線與絕對值"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-3",t:"不等式與區間"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-4",t:"乘法公式"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-5",t:"指數運算"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-6",t:"科學記號"},
+{ch1:"必修1-1",name:"數與式",f:"必1-1-7",t:"常用對數"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-1",t:"線型函數"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-2",t:"直線方程式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-3",t:"二元一次不等式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-4",t:"線型規劃初步"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-5",t:"圓的標準式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-6",t:"圓的一般式"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-7",t:"圓與直線關係"},
+{ch1:"必修1-2",name:"直線與圓",f:"必1-2-8",t:"圓的切線"},
+
+// ============ 必修數學第2冊 ============
+{ch1:"必修2-1",name:"三角",f:"必2-1-1",t:"銳角三角函數"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-2",t:"廣義三角函數"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-3",t:"弧度與扇形"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-4",t:"正餘弦定理"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-5",t:"和角公式"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-6",t:"倍角公式"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-7",t:"半角公式"},
+{ch1:"必修2-1",name:"三角",f:"必2-1-8",t:"三角測量"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-1",t:"等差數列"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-2",t:"等比數列"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-3",t:"遞迴關係"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-4",t:"數學歸納法"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-5",t:"Σ求和公式"},
+{ch1:"必修2-2",name:"數列與級數",f:"必2-2-6",t:"有限級數"},
+
+// ============ 必修數學第3冊 ============
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-1",t:"邏輯與集合"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-2",t:"集合運算"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-3",t:"加法原理"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-4",t:"乘法原理"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-5",t:"排列"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-6",t:"組合"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-7",t:"分組分堆"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-8",t:"二項式定理"},
+{ch1:"必修3-1",name:"排列組合",f:"必3-1-9",t:"巴斯卡三角形"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-1",t:"樣本空間與事件"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-2",t:"古典機率"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-3",t:"機率性質"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-4",t:"條件機率"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-5",t:"獨立事件"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-6",t:"貝氏定理"},
+{ch1:"必修3-2",name:"機率",f:"必3-2-7",t:"數學期望值"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-1",t:"平均數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-2",t:"中位數與眾數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-3",t:"全距與四分位距"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-4",t:"標準差"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-5",t:"變異數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-6",t:"數據標準化"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-7",t:"相關係數"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-8",t:"迴歸直線"},
+{ch1:"必修3-3",name:"數據分析",f:"必3-3-9",t:"最小平方估計"},
+
+// ============ 必修數學第4冊 ============
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-1",t:"向量定義"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-2",t:"向量運算"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-3",t:"坐標向量"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-4",t:"線性組合"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-5",t:"向量內積"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-6",t:"內積應用"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-7",t:"正射影"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-8",t:"兩向量夾角"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-9",t:"點到直線距離"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-10",t:"平行線距離"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-11",t:"四心座標"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-12",t:"面積行列式"},
+{ch1:"必修4-1",name:"平面向量",f:"必4-1-13",t:"克拉瑪公式"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-1",t:"空間概念"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-2",t:"空間坐標系"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-3",t:"空間向量運算"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-4",t:"空間內積"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-5",t:"空間外積"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-6",t:"三階行列式"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-7",t:"重心座標"},
+{ch1:"必修4-2",name:"空間向量",f:"必4-2-8",t:"四面體體積"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-1",t:"平面方程式"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-2",t:"兩平面夾角"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-3",t:"空間直線方程式"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-4",t:"直線參數式"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-5",t:"直線與平面交點"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-6",t:"兩直線關係"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-7",t:"平面與直線關係"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-8",t:"點到平面距離"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-9",t:"兩平行平面距離"},
+{ch1:"必修4-3",name:"空間平面直線",f:"必4-3-10",t:"兩歪斜線距離"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-1",t:"矩陣加法減法"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-2",t:"矩陣乘法"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-3",t:"矩陣乘法性質"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-4",t:"單位矩陣"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-5",t:"二階反矩陣"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-6",t:"三階行列式"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-7",t:"行列式性質"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-8",t:"Cramer's Rule"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-9",t:"矩陣秩"},
+{ch1:"必修4-4",name:"矩陣",f:"必4-4-10",t:"高斯消去法"},
+
+// ============ 選修數學I（微積分） ============
+{ch1:"選修I-1",name:"極限",f:"選I-1-1",t:"數列極限"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-2",t:"函數極限"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-3",t:"極限性質"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-4",t:"夾擠定理"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-5",t:"兩個重要極限"},
+{ch1:"選修I-1",name:"極限",f:"選I-1-6",t:"連續函數"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-1",t:"導數定義"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-2",t:"導函數"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-3",t:"微分公式"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-4",t:"連鎖律"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-5",t:"隱微分"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-6",t:"對數微分"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-7",t:"均值定理"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-8",t:"洛必達法則"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-9",t:"函數圖形"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-10",t:"遞增遞減"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-11",t:"極值判定"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-12",t:"凹凸性"},
+{ch1:"選修I-2",name:"微分",f:"選I-2-13",t:"最佳化問題"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-1",t:"不定積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-2",t:"基本積分公式"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-3",t:"分部積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-4",t:"代換積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-5",t:"定積分"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-6",t:"微積分基本定理"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-7",t:"面積計算"},
+{ch1:"選修I-3",name:"積分",f:"選I-3-8",t:"旋轉體體積"},
+
+// ============ 選修數學II（線性規劃與統計） ============
+{ch1:"選修II-1",name:"線性規劃",f:"選II-1-1",t:"線性規劃問題"},
+{ch1:"選修II-1",name:"線性規劃",f:"選II-1-2",t:"可行解區域"},
+{ch1:"選修II-1",name:"線性規劃",f:"選II-1-3",t:"目標函數"},
+{ch1:"選修II-1",name:"線性規劃",f:"選II-1-4",t:"最佳解"},
+{ch1:"選修II-1",name:"線性規劃",f:"選II-1-5",t:"整數線性規劃"},
+{ch1:"選修II-1",name:"線性規劃",f:"選II-1-6",t:"單形法初步"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-1",t:"隨機變數"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-2",t:"離散隨機變數"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-3",t:"期望值"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-4",t:"變異數"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-5",t:"二項分配"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-6",t:" Poisson分配"},
+{ch1:"選修II-2",name:"機率與統計",f:"選II-2-7",t:"幾何分配"},
+{ch1:"選修II-3",name:"抽樣與估計",f:"選II-3-1",t:"抽樣方法"},
+{ch1:"選修II-3",name:"抽樣與估計",f:"選II-3-2",t:"中央極限定理"},
+{ch1:"選修II-3",name:"抽樣與估計",f:"選II-3-3",t:"點估計"},
+{ch1:"選修II-3",name:"抽樣與估計",f:"選II-3-4",t:"區間估計"},
+{ch1:"選修II-3",name:"抽樣與估計",f:"選II-3-5",t:"信賴區間"},
+{ch1:"選修II-3",name:"抽樣與估計",f:"選II-3-6",t:"樣本大小決定"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-1",t:"虛無假說"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-2",t:"對立假說"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-3",t:"Type I 錯誤"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-4",t:"Type II 錯誤"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-5",t:"顯著水準"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-6",t:"檢定統計量"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-7",t:"z檢定"},
+{ch1:"選修II-4",name:"假設檢定",f:"選II-4-8",t:"t檢定"},
+{ch1:"選修II-5",name:"迴歸分析",f:"選II-5-1",t:"相關分析"},
+{ch1:"選修II-5",name:"迴歸分析",f:"選II-5-2",t:"簡單線性迴歸"},
+{ch1:"選修II-5",name:"迴歸分析",f:"選II-5-3",t:"迴歸係數"},
+{ch1:"選修II-5",name:"迴歸分析",f:"選II-5-4",t:"決定係數"},
+{ch1:"選修II-5",name:"迴歸分析",f:"選II-5-5",t:"殘差分析"}
+];
+
+const appTitles = {
+fkA: '📚 高中分科數甲 讀書計畫',
+fkB: '📚 高中分科數乙 讀書計畫'
+};
+
+const topicsMap = {
+fkA: topicsFkA,
+fkB: topicsFkB
+};
+
+let currentApp = 'fkA';
+let allTopics = topicsFkA;
+let scheduleData = [];
+let scheduleDataWithFullDate = [];
+
+function openApp(app) {
+currentApp = app;
+allTopics = topicsMap[app];
+document.getElementById('appTitle').textContent = appTitles[app];
+document.querySelector('.home-view').style.display = 'none';
+document.querySelector('.app-view').classList.add('active');
+document.body.classList.add('app-page');
+scheduleData = [];
+scheduleDataWithFullDate = [];
+document.getElementById('scheduleContainer').classList.remove('active');
+document.getElementById('calendarContent').innerHTML = '';
+}
+
+function goHome() {
+document.querySelector('.home-view').style.display = 'block';
+document.querySelector('.app-view').classList.remove('active');
+document.body.classList.remove('app-page');
+}
+
+function showError(msg) {
+const errDiv = document.getElementById('errorMsg');
+errDiv.textContent = msg;
+errDiv.classList.add('show');
+}
+
+function hideError() {
+document.getElementById('errorMsg').classList.remove('show');
+}
+
+function generateSchedule() {
+hideError();
+const startDateStr = document.getElementById('startDate').value;
+const endDateStr = document.getElementById('endDate').value;
+if (!startDateStr || !endDateStr) {
+showError('⚠️ 請選擇開始和結束日期');
+return;
+}
+const startDate = new Date(startDateStr);
+const endDate = new Date(endDateStr);
+if (startDate > endDate) {
+showError('⚠️ 結束日期必須在開始日期之後');
+return;
+}
+
+const dailyChapters = parseInt(document.getElementById('dailyChapters').value);
+const restDayCheckboxes = document.querySelectorAll('input[name="restDay"]:checked');
+const restDays = Array.from(restDayCheckboxes).map(cb => parseInt(cb.value));
+const reviewMode = document.getElementById('reviewMode').value;
+const dailyPractice = parseInt(document.getElementById('dailyPractice').value);
+
+scheduleData = [];
+scheduleDataWithFullDate = [];
+let currentDate = new Date(startDate);
+let topicIndex = 0;
+let weekCount = 0;
+
+while (currentDate <= endDate) {
+const dayOfWeek = currentDate.getDay();
+const dateStr = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
+const monthKey = `${currentDate.getMonth() + 1}月`;
+
+let dayType = 'study';
+let content = '';
+let displayContent = '';
+
+if (restDays.includes(dayOfWeek)) {
+dayType = 'rest';
+content = '休息';
+displayContent = '😴 休息';
+} else {
+const shouldReview = (reviewMode === 'weekly' && weekCount > 0 && dayOfWeek === 1) || 
+(reviewMode === 'biweekly' && weekCount > 0 && weekCount % 2 === 0 && dayOfWeek === 1);
+if (shouldReview && topicIndex > 0) {
+dayType = 'review';
+content = '複習週';
+displayContent = '🔄 複習本週進度';
+} else if (topicIndex < allTopics.length) {
+let topicsToday = [];
+for (let i = 0; i < dailyChapters && topicIndex < allTopics.length; i++) {
+topicsToday.push(allTopics[topicIndex]);
+topicIndex++;
+}
+content = topicsToday.map(t => `${t.name} ${t.t}`).join(' / ');
+displayContent = topicsToday.map(t => `<div class="chapter">${t.name}</div><div class="sub-chapter">${t.t}</div>`).join('');
+if (dayOfWeek === 0) weekCount++;
+} else {
+dayType = 'complete';
+content = '全部完成!';
+displayContent = '✅ 全部完成！';
+}
+}
+
+const dayData = {
+date: dateStr,
+fullDate: new Date(currentDate),
+monthKey: monthKey,
+dayOfWeek: dayOfWeek,
+type: dayType,
+content: content,
+displayContent: displayContent,
+practice: dayType === 'study' ? dailyPractice : 0
+};
+
+scheduleData.push(dayData);
+scheduleDataWithFullDate.push(dayData);
+currentDate.setDate(currentDate.getDate() + 1);
+}
+
+renderCalendar();
+updateSummary();
+document.getElementById('scheduleContainer').classList.add('active');
+document.getElementById('scheduleContainer').scrollIntoView({behavior: 'smooth'});
+}
+
+function renderCalendar() {
+const container = document.getElementById('calendarContent');
+let html = '';
+
+const months = {};
+scheduleData.forEach(day => {
+if (!months[day.monthKey]) months[day.monthKey] = [];
+months[day.monthKey].push(day);
+});
+
+for (const monthKey in months) {
+const monthDays = months[monthKey];
+const studyCount = monthDays.filter(d => d.type === 'study').length;
+
+html += `<div class="month-container">`;
+html += `<div class="month-header"><h3>📅 ${monthKey}</h3><span class="month-stats">學習: ${studyCount}天</span></div>`;
+html += `<div class="calendar-grid">`;
+html += '<div class="calendar-header">日</div><div class="calendar-header">一</div><div class="calendar-header">二</div><div class="calendar-header">三</div><div class="calendar-header">四</div><div class="calendar-header">五</div><div class="calendar-header">六</div>';
+
+const firstDay = monthDays[0].dayOfWeek;
+for (let i = 0; i < firstDay; i++) {
+html += '<div class="calendar-day other-month"></div>';
+}
+
+monthDays.forEach(d => {
+const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6) && d.type !== 'rest';
+const typeLabel = d.type === 'study' ? '📖 學習' : d.type === 'review' ? '🔄 複習' : d.type === 'rest' ? '😴 休息' : '✅ 完成';
+
+html += `<div class="calendar-day ${d.type} ${isWeekend ? 'weekend' : ''}">
+<div class="day-number">${d.date}</div>
+<div class="day-content">${d.displayContent}</div>
+<div class="day-type ${d.type}">${typeLabel}</div>
+</div>`;
+});
+html += '</div></div>';
+}
+
+container.innerHTML = html;
+}
+
+function updateSummary() {
+const totalDays = scheduleData.length;
+const studyDays = scheduleData.filter(d => d.type === 'study').length;
+const restDays = scheduleData.filter(d => d.type === 'rest').length;
+const totalPractice = scheduleData.reduce((sum, d) => sum + d.practice, 0);
+const dailyChapters = parseInt(document.getElementById('dailyChapters').value);
+const totalTopics = studyDays * dailyChapters;
+const progress = Math.round((totalTopics / allTopics.length) * 100);
+
+document.getElementById('totalDays').textContent = totalDays;
+document.getElementById('studyDays').textContent = studyDays;
+document.getElementById('restDaysCount').textContent = restDays;
+document.getElementById('totalTopics').textContent = totalTopics;
+document.getElementById('totalPractice').textContent = totalPractice;
+document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+document.getElementById('progressFill').textContent = Math.min(progress, 100) + '%';
+document.getElementById('currentTopic').textContent = totalTopics;
+document.getElementById('totalTopicCount').textContent = allTopics.length;
+}
+
+function exportExcelCalendar() {
+if (scheduleData.length === 0) { alert('請先產生讀書計畫！'); return; }
+
+const wb = XLSX.utils.book_new();
+const months = {};
+scheduleDataWithFullDate.forEach(d => {
+if (!months[d.monthKey]) months[d.monthKey] = [];
+months[d.monthKey].push(d);
+});
+
+const appNames = {fkA: '分科數甲', fkB: '分科數乙'};
+const appName = appNames[currentApp];
+
+const statsData = [
+[`📚 高中${appName} 讀書計畫`],
+['👨‍🏫 李向宇老師製作'],
+['統計總覽'],
+[''],
+['總天數', scheduleData.length],
+['學習天數', scheduleData.filter(d => d.type === 'study').length],
+['複習天數', scheduleData.filter(d => d.type === 'review').length],
+['休息天數', scheduleData.filter(d => d.type === 'rest').length],
+['總主題數', allTopics.length],
+['總練習題', scheduleData.reduce((sum, d) => sum + d.practice, 0)]
+];
+
+const wsStats = XLSX.utils.aoa_to_sheet(statsData);
+wsStats['!cols'] = [{wch: 20}, {wch: 15}];
+XLSX.utils.book_append_sheet(wb, wsStats, "📊 統計");
+
+for (const monthKey in months) {
+const monthDays = months[monthKey];
+const firstDayOfWeek = monthDays[0].dayOfWeek;
+const year = monthDays[0].fullDate.getFullYear();
+
+const calendarData = [];
+calendarData.push([`📅 ${year}年 ${monthKey} 讀書計畫`, '', '', '', '', '', '']);
+calendarData.push(['日', '一', '二', '三', '四', '五', '六']);
+
+let weekRow = [];
+for (let i = 0; i < firstDayOfWeek; i++) {
+weekRow.push({content: '', type: 'empty'});
+}
+
+monthDays.forEach(d => {
+weekRow.push({content: d.date + '\n' + d.content, type: d.type});
+if (weekRow.length === 7) {
+calendarData.push(weekRow.map(w => w.content));
+weekRow = [];
+}
+});
+
+if (weekRow.length > 0) {
+while (weekRow.length < 7) {
+weekRow.push({content: '', type: 'empty'});
+}
+calendarData.push(weekRow.map(w => w.content));
+}
+
+const ws = XLSX.utils.aoa_to_sheet(calendarData);
+ws['!cols'] = Array(7).fill({wch: 18});
+XLSX.utils.book_append_sheet(wb, ws, monthKey);
+}
+
+XLSX.writeFile(wb, `高中${appName}讀書計畫.xlsx`);
+}
+
+function exportWordCalendar() {
+if (scheduleData.length === 0) { alert('請先產生讀書計畫！'); return; }
+
+const months = {};
+scheduleDataWithFullDate.forEach(d => {
+if (!months[d.monthKey]) months[d.monthKey] = [];
+months[d.monthKey].push(d);
+});
+
+const appNames = {fkA: '分科數甲', fkB: '分科數乙'};
+const appName = appNames[currentApp];
+const year = scheduleDataWithFullDate[0].fullDate.getFullYear();
+const totalDays = scheduleData.length;
+const studyDays = scheduleData.filter(d => d.type === 'study').length;
+const restDays = scheduleData.filter(d => d.type === 'rest').length;
+const reviewDays = scheduleData.filter(d => d.type === 'review').length;
+const totalTopics = allTopics.length;
+const totalPractice = scheduleData.reduce((sum, d) => sum + d.practice, 0);
+
+let htmlContent = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'><title>高中${appName} 讀書計畫</title>
+<style>
+body { font-family: 'Microsoft JhengHei', Arial, sans-serif; margin: 10mm; font-size: 10pt; }
+h1 { color: #1e3c72; text-align: center; font-size: 18pt; border-bottom: 2px solid #1e3c72; padding-bottom: 8px; margin-bottom: 10px; }
+.teacher { text-align: center; color: #666; font-size: 11pt; margin-bottom: 15px; }
+table.stats { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+table.stats td { border: 1px solid #1e3c72; padding: 10px 12px; text-align: center; }
+table.stats .label { background-color: #1e3c72; color: white; font-weight: bold; width: 20%; }
+table.stats .value { background-color: #f0f0f0; color: #1e3c72; font-weight: bold; font-size: 12pt; }
+table.calendar { width: 100%; border-collapse: collapse; margin: 10px 0; }
+table.calendar th { background: #1e3c72; color: white; padding: 8px; text-align: center; font-weight: bold; }
+table.calendar td { border: 1px solid #ccc; padding: 6px; vertical-align: top; height: 60px; }
+.date { font-weight: bold; color: #1e3c72; margin-bottom: 3px; font-size: 9pt; }
+.content { font-size: 7.5pt; line-height: 1.3; }
+.chapter { color: #1e3c72; font-weight: bold; }
+.study { background-color: #e8f5e9; }
+.rest { background-color: #f0f0f0; }
+.review { background-color: #e3f2fd; }
+.complete { background-color: #fff3e0; }
+.legend { display: flex; gap: 15px; margin: 10px 0; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 8pt; }
+.legend-color { width: 14px; height: 14px; border-radius: 2px; }
+h2 { font-size: 12pt; color: white; background: #1e3c72; padding: 8px 12px; margin-top: 20px; margin-bottom: 5px; }
+</style></head>
+<body>
+<h1>📚 高中${appName} 讀書計畫</h1>
+<p class='teacher'>👨‍🏫 李向宇老師製作</p>
+<table class='stats' align='center'>
+<tr><td class='label'>總天數</td><td class='value'>${totalDays}</td><td class='label'>學習天數</td><td class='value'>${studyDays}</td><td class='label'>休息天數</td><td class='value'>${restDays}</td></tr>
+<tr><td class='label'>總主題</td><td class='value'>${totalTopics}</td><td class='label'>總練習題</td><td class='value'>${totalPractice}</td><td class='label'>複習天數</td><td class='value'>${reviewDays}</td></tr>
+</table>
+<div class='legend'>
+<div class='legend-item'><div class='legend-color' style='background: #e8f5e9;'></div>📖 學習</div>
+<div class='legend-item'><div class='legend-color' style='background: #e3f2fd;'></div>🔄 複習</div>
+<div class='legend-item'><div class='legend-color' style='background: #f0f0f0;'></div>😴 休息</div>
+<div class='legend-item'><div class='legend-color' style='background: #fff3e0;'></div>✅ 完成</div>
+</div>`;
+
+for (const monthKey in months) {
+const monthDays = months[monthKey];
+const firstDayOfWeek = monthDays[0].dayOfWeek;
+const studyCount = monthDays.filter(d => d.type === 'study').length;
+
+htmlContent += `<h2>📅 ${year}年 ${monthKey} (學習: ${studyCount}天)</h2>`;
+htmlContent += `<table class='calendar'>`;
+htmlContent += `<tr><th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th></tr><tr>`;
+
+for (let i = 0; i < firstDayOfWeek; i++) {
+htmlContent += `<td style='background:#f5f5f5;'></td>`;
+}
+
+let cellCount = firstDayOfWeek;
+monthDays.forEach(d => {
+const isWeekend = (d.dayOfWeek === 0 || d.dayOfWeek === 6);
+htmlContent += `<td class='${d.type} ${isWeekend ? 'weekend' : ''}'><div class='date'>${d.date}</div>`;
+if (d.content && d.content !== '休息') {
+const contentParts = d.content.split(' / ');
+htmlContent += `<div class='content'>${contentParts.map(c => `<span class='chapter'>${c}</span>`).join('<br>')}</div>`;
+}
+htmlContent += `</td>`;
+cellCount++;
+if (cellCount % 7 === 0) { htmlContent += `</tr><tr>`; }
+});
+
+while (cellCount % 7 !== 0) {
+htmlContent += `<td style='background:#f5f5f5;'></td>`;
+cellCount++;
+}
+htmlContent += `</tr></table>`;
+}
+
+htmlContent += `</body></html>`;
+
+const blob = new Blob(['\ufeff' + htmlContent], {type: 'application/msword;charset=utf-8'});
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = `高中${appName}讀書計畫.doc`;
+link.click();
+}
+
+function copyToClipboard() {
+const appNames = {fkA: '分科數甲', fkB: '分科數乙'};
+const appName = appNames[currentApp];
+let text = `高中${appName} 讀書計畫\n========================\n\n`;
+
+let currentMonth = '';
+scheduleData.forEach(day => {
+if (day.monthKey !== currentMonth) {
+currentMonth = day.monthKey;
+text += `\n【${currentMonth}】\n`;
+}
+const typeEmoji = day.type === 'study' ? '📖' : (day.type === 'review' ? '🔄' : (day.type === 'rest' ? '😴' : '✅'));
+text += `${day.date} ${typeEmoji} ${day.content}\n`;
+});
+
+navigator.clipboard.writeText(text).then(() => alert('已複製到剪貼簿!'));
+}
+</script>
+</body>
+</html>
